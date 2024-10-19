@@ -1,0 +1,132 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+# Read the data
+data = pd.read_csv('C:/Users/92605/Desktop/156MachineLearning/Assignments/wine+quality/winequality_red.csv', delimiter=';')
+
+# input and target variable
+X = data.drop(columns=['quality']).values  
+y = data['quality'].values  
+
+# Split the dataset into train, validation, and test sets.
+X_train_val, X_test, y_train_val, y_test = train_test_split(X, y, test_size=0.1, random_state=2)
+X_train, X_val, y_train, y_val = train_test_split(X_train_val, y_train_val, test_size=0.15, random_state=2)
+
+
+# Standardize the features
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)  # Standardize training data
+X_val = scaler.transform(X_val)          # Standardize validation data
+X_test = scaler.transform(X_test)        # Standardize test data
+
+
+# Closed-Form Solution
+# Add a bias term to the training data
+X_train_b = np.c_[np.ones((X_train.shape[0], 1)), X_train]  # Add a column of ones
+
+# Calculate parameters using the closed-form solution
+# omega = (X^T * X)^(-1) * X^T * y
+X_b_transpose = np.transpose(X_train_b)  # Calculate the transpose of X
+X_b_transpose_dot_X_b = np.dot(X_b_transpose, X_train_b)  # Calculate X^T * X
+X_b_transpose_dot_y = np.dot(X_b_transpose, y_train)  # Calculate X^T * y
+
+# Calculate parameters theta
+omega_best = np.dot(np.linalg.inv(X_b_transpose_dot_X_b), X_b_transpose_dot_y)
+
+# Output estimated parameters
+print("Estimated parameters (omega):")
+print(omega_best)
+
+# Make predictions on the validation set
+X_val_b = np.c_[np.ones((X_val.shape[0], 1)), X_val]  # Add bias term
+y_val_predict = np.dot(X_val_b, omega_best)  # Predictions
+
+# Calculate the mean squared error for the validation set (MSE)
+val_mse = np.mean((y_val_predict - y_val) ** 2)
+print("Validation set mean squared error (MSE) using closed-form solution:", val_mse)
+
+# Make predictions on the test set
+X_test_b = np.c_[np.ones((X_test.shape[0], 1)), X_test]  # Add bias term
+y_test_predict = np.dot(X_test_b, omega_best)  # Predictions
+
+# Calculate the mean squared error for the test set (MSE)
+test_mse = np.mean((y_test_predict - y_test) ** 2)
+print("Test set mean squared error (MSE) using closed-form solution:", test_mse)
+
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+
+# Load the dataset
+data = pd.read_csv('C:/Users/92605/Desktop/156MachineLearning/Assignments/wine+quality/winequality_red.csv', delimiter=';')
+
+# Prepare features and target variable
+X = data.drop(columns=['quality']).values  # Features
+y = data['quality'].values  # Target variable
+
+# Split the dataset into training and testing sets
+X_train_val, X_test, y_train_val, y_test = train_test_split(X, y, test_size=0.1, random_state=2)
+X_train, X_val, y_train, y_val = train_test_split(X_train_val, y_train_val, test_size=0.15, random_state=2)
+
+# Add bias term to the training data
+X_train_b = np.c_[np.ones((X_train.shape[0], 1)), X_train]  # Adding a column of ones
+
+# Calculate parameters using the closed-form solution
+theta_best = np.dot(np.linalg.inv(np.dot(X_train_b.T, X_train_b)), np.dot(X_train_b.T, y_train))
+
+# Predict the values for the training set
+y_train_predict = np.dot(X_train_b, theta_best)
+
+# Plotting actual vs predicted values
+# Create a unique list of quality values
+unique_qualities = np.unique(y_test)
+
+# Create an array for the x-axis positions based on the quality
+x_positions = np.array([np.where(unique_qualities == quality)[0][0] for quality in y_test])
+
+# Plotting actual vs predicted values for the test set
+plt.figure(figsize=(12, 6))
+
+# Plot actual values, grouping by quality
+for quality in unique_qualities:
+    indices = np.where(y_test == quality)
+    # Adjust x-positions to avoid overlap (jitter)
+    jittered_positions = x_positions[indices] + np.random.normal(0, 0.05, size=len(indices[0]))
+    plt.scatter(jittered_positions, y_test[indices], label=f'Actual Quality: {quality}', alpha=0.6)
+
+# Round the predicted values to the nearest integer and ensure they are valid
+rounded_preds = np.clip(np.round(y_test_predict), unique_qualities.min(), unique_qualities.max())
+predicted_positions = np.array([np.where(unique_qualities == int(pred))[0][0] for pred in rounded_preds])
+
+# Plot predicted values as points
+for quality in unique_qualities:
+    pred_indices = np.where(rounded_preds == quality)
+    # Adjust x-positions to avoid overlap for predicted values (jitter)
+    jittered_pred_positions = predicted_positions[pred_indices] + np.random.normal(0, 0.05, size=len(pred_indices[0]))
+    plt.scatter(jittered_pred_positions, rounded_preds[pred_indices], marker='x', color='red', label=f'Predicted Quality: {quality}' if quality == unique_qualities[0] else "", alpha=0.6)
+
+# Set x-ticks to unique quality values
+plt.xticks(range(len(unique_qualities)), unique_qualities)
+
+plt.xlabel('Quality Values')
+plt.ylabel('Predicted Quality Values')
+plt.title('Actual Quality Values vs Predicted Quality Values (Test Set)')
+plt.legend()
+plt.grid()
+plt.show()
+
+
+# Calculate RMSE for training and test sets
+def calculate_rmse(actual, predicted):
+    return np.sqrt(np.mean((actual - predicted) ** 2))
+
+train_rmse = calculate_rmse(y_train, y_train_predict)
+test_rmse = calculate_rmse(y_test, y_test_predict)
+
+print(f"Training RMSE: {train_rmse:.4f}")
+print(f"Testing RMSE: {test_rmse:.4f}")
