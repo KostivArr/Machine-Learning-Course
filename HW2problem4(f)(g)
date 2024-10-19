@@ -22,15 +22,15 @@ X_val = scaler.transform(X_val)
 X_test = scaler.transform(X_test)        
 
 # 5. Add a bias term to the training, validation, and test data
-X_train_b = np.c_[np.ones((X_train.shape[0], 1)), X_train]  # Add a column of ones
-X_val_b = np.c_[np.ones((X_val.shape[0], 1)), X_val]  # Add bias term
-X_test_b = np.c_[np.ones((X_test.shape[0], 1)), X_test]  # Add bias term
+X_train_b = np.c_[np.ones((X_train.shape[0], 1)), X_train] 
+X_val_b = np.c_[np.ones((X_val.shape[0], 1)), X_val]  
+X_test_b = np.c_[np.ones((X_test.shape[0], 1)), X_test]  
 
 # 6. Initialize weights with random values
 w = np.random.rand(X_train_b.shape[1])  # Weight initialization
 
 # 7. Set learning rate and number of iterations
-learning_rate = 0.01 
+learning_rate = 0.001 
 num_iterations = 1000
 
 # 8. LMS Algorithm
@@ -38,21 +38,17 @@ for iteration in range(num_iterations):
     for i in range(X_train_b.shape[0]):
         y_pred = np.dot(X_train_b[i], w)  # Make prediction
         error = y_pred - y_train[i]  # Calculate error
-        
         w -= learning_rate * error * X_train_b[i]  # Update weights
 
-
 # 9. Predictions
-y_train_predict = np.dot(X_train_b, w)  # Predictions for training set
-y_test_predict = np.dot(X_test_b, w)    # Predictions for test set
+y_train_predict = np.dot(X_train_b, w)  
+y_test_predict = np.dot(X_test_b, w)    
 
-# 10. Calculate RMS for training and test sets
+# 10. Calculate RMS for training and test sets and report results
 train_mse = np.mean((y_train_predict - y_train) ** 2)
 train_rms = np.sqrt(train_mse)
 test_mse = np.mean((y_test_predict - y_test) ** 2)
 test_rms = np.sqrt(test_mse)
-
-# 11. Report results
 print("Final weights (w):")
 print(w)
 print("Training set root mean square (RMS):", train_rms)
