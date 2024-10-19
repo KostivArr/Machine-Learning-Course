@@ -4,85 +4,56 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-# Read the data
+# 1. Read the data
 data = pd.read_csv('C:/Users/92605/Desktop/156MachineLearning/Assignments/wine+quality/winequality_red.csv', delimiter=';')
 
-# input and target variable
+# 2. Input and target variable
 X = data.drop(columns=['quality']).values  
 y = data['quality'].values  
 
-# Split the dataset into train, validation, and test sets.
-X_train_val, X_test, y_train_val, y_test = train_test_split(X, y, test_size=0.1, random_state=2)
-X_train, X_val, y_train, y_val = train_test_split(X_train_val, y_train_val, test_size=0.15, random_state=2)
+# 3. Split the dataset into train, validation, and test sets.
+X_train_val, X_test, y_train_val, y_test = train_test_split(X, y, test_size=0.1,random_state=2)
+X_train, X_val, y_train, y_val = train_test_split(X_train_val, y_train_val, test_size=0.1667,random_state=2)
 
-# Standardize the features
+# 4. Data Standardization
 scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)  # Standardize training data
-X_val = scaler.transform(X_val)          # Standardize validation data
-X_test = scaler.transform(X_test)        # Standardize test data
+X_train = scaler.fit_transform(X_train)  
+X_val = scaler.transform(X_val)          
+X_test = scaler.transform(X_test)        
 
-
-# Closed-Form Solution
-# Add a bias term to the training data
+# 5. Add a bias term to the training, validation, and test data
 X_train_b = np.c_[np.ones((X_train.shape[0], 1)), X_train]  # Add a column of ones
 X_val_b = np.c_[np.ones((X_val.shape[0], 1)), X_val]  # Add bias term
 X_test_b = np.c_[np.ones((X_test.shape[0], 1)), X_test]  # Add bias term
-# Least Mean Squares (LMS) Algorithm
 
-# Initialize weights w(0) with random values
-np.random.seed(42)  # Set random seed for reproducibility
-w = np.random.rand(X_train_b.shape[1])  # Initialize weights
+# 6. Initialize weights with random values
+w = np.random.rand(X_train_b.shape[1])  # Weight initialization
 
-# Set learning rate and number of iterations
-learning_rate = 0.001  # Lower the learning rate
-num_iterations = 1000  # Number of iterations
+# 7. Set learning rate and number of iterations
+learning_rate = 0.01 
+num_iterations = 1000
 
-# LMS algorithm
-train_mse_list = []
+# 8. LMS Algorithm
 for iteration in range(num_iterations):
     for i in range(X_train_b.shape[0]):
-        # Calculate the predicted value
-        y_pred = np.dot(X_train_b[i], w)
-        # Calculate the error
-        error = y_pred - y_train[i]
+        y_pred = np.dot(X_train_b[i], w)  # Make prediction
+        error = y_pred - y_train[i]  # Calculate error
         
-        # Check for NaN in the error
-        if np.isnan(error):
-            print(f"NaN encountered at iteration {iteration}, index {i}")
-            break
-        
-        # Update weights
-        w -= learning_rate * error * X_train_b[i]
-    
-    # Record the training mean squared error for each iteration
-    y_train_predict = np.dot(X_train_b, w)
-    train_mse = np.mean((y_train_predict - y_train) ** 2)
-    train_mse_list.append(train_mse)
+        w -= learning_rate * error * X_train_b[i]  # Update weights
 
-# Output final weights
-print("Final weights (w) using LMS algorithm:")
+
+# 9. Predictions
+y_train_predict = np.dot(X_train_b, w)  # Predictions for training set
+y_test_predict = np.dot(X_test_b, w)    # Predictions for test set
+
+# 10. Calculate RMS for training and test sets
+train_mse = np.mean((y_train_predict - y_train) ** 2)
+train_rms = np.sqrt(train_mse)
+test_mse = np.mean((y_test_predict - y_test) ** 2)
+test_rms = np.sqrt(test_mse)
+
+# 11. Report results
+print("Final weights (w):")
 print(w)
-
-# Make predictions on the validation set
-y_val_predict_lms = np.dot(X_val_b, w)  # Predictions
-
-# Calculate the mean squared error for the validation set (MSE)
-val_mse_lms = np.mean((y_val_predict_lms - y_val) ** 2)
-print("Validation set mean squared error (MSE) using LMS algorithm:", val_mse_lms)
-
-# Make predictions on the test set
-y_test_predict_lms = np.dot(X_test_b, w)  # Predictions
-
-# Calculate the mean squared error for the test set (MSE)
-test_mse_lms = np.mean((y_test_predict_lms - y_test) ** 2)
-print("Test set mean squared error (MSE) using LMS algorithm:", test_mse_lms)
-
-# Plot the training error over iterations for LMS
-plt.figure(figsize=(10, 6))
-plt.plot(range(num_iterations), train_mse_list, label='Training Error (LMS)')
-plt.xlabel('Iterations')
-plt.ylabel('Mean Squared Error (MSE)')
-plt.title('Training Error Over Iterations in LMS Algorithm')
-plt.legend()
-plt.grid()
-plt.show()
+print("Training set root mean square (RMS):", train_rms)
+print("Test set root mean square (RMS):", test_rms)
