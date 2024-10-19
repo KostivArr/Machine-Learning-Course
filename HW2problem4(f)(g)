@@ -44,7 +44,7 @@ for iteration in range(num_iterations):
 y_train_predict = np.dot(X_train_b, w)  
 y_test_predict = np.dot(X_test_b, w)    
 
-# 10. Calculate RMS for training and test sets and report results
+# 10. Calculate RMS and report 
 train_mse = np.mean((y_train_predict - y_train) ** 2)
 train_rms = np.sqrt(train_mse)
 test_mse = np.mean((y_test_predict - y_test) ** 2)
