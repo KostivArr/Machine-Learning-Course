@@ -6,21 +6,16 @@ def sigmoid(z):
 
 #define loss function for one piece of data
 def loss_function(w,x,t):
-    return ((1-t)*np.log(sigmoid(np.dot(w,x)))+t*np.log(1-sigmoid(np.dot(w,x))))
+    return (t*np.log(sigmoid(np.dot(w,x)))+(1-t)*np.log(1-sigmoid(np.dot(w,x))))
 
 def gradient_function(w,x,t):
-    return (1-sigmoid(np.dot(w,x))-t)*x
+    return (sigmoid(np.dot(w,x))-t)*x
 
 N=100  #Sample size
 M=10   #Batch size
 iterations=1000
 rate=0.01   #learning rate
-
-x_raw=np.random.rand(N,3)
-x = np.hstack((np.ones((N, 1)), x_raw))
 w=np.random.rand(x.shape[1])
-t=np.random.randint(0,2,size=N)
-
 
 for epoch in range(iterations):
     selected_indices=np.random.choice(N,M,replace=False)
