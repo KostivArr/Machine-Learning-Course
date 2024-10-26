@@ -1,0 +1,65 @@
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
+# Read data
+column_names = ['ID', 'target'] + [f'feature_{i}' for i in range(1, 31)]
+df = pd.read_csv('wdbc.data', header=None, names=column_names)
+df = df.drop(columns=['ID'])
+df['target'] = df['target'].map({'B': 0, 'M': 1})
+
+# Input and target variable
+x = df.drop(columns=['target']).values  
+y = df['target'].values  
+
+# Split the dataset into training and test sets
+x_train_val, x_test, y_train_val, y_test = train_test_split(x, y, test_size=0.15, random_state=4)
+x_train, x_val, y_train, y_val = train_test_split(x_train_val, y_train_val, test_size=0.2, random_state=4)
+
+# Report class distribution
+train_class_counts = np.bincount(y_train)
+print("Class distribution in training set:")
+print(f"Class 0 (B): {train_class_counts[0]}")
+print(f"Class 1 (M): {train_class_counts[1]}")
+
+# Function definitions
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+def gradient_function(w, x, y):
+    return (sigmoid(np.dot(w, x)) - y) * x
+
+# Set hyperparameters for the specific case
+rate = 0.01
+M = 64
+iterations = 10000
+N = x_train.shape[0]  # Training set size
+
+# Initialize the model weights randomly
+x_train_with_bias = np.hstack((np.ones((N, 1)), x_train))
+w = np.random.normal(loc=0.0, scale=1.0, size=x_train_with_bias.shape[1])
+
+# Mini-batch SGD
+for epoch in range(iterations):
+    selected_indices = np.random.choice(N, M, replace=False)
+    X_batch = x_train_with_bias[selected_indices]
+    y_batch = y_train[selected_indices]
+    gradient_mean = np.mean([gradient_function(w, X_batch[i], y_batch[i]) for i in range(M)], axis=0)
+    w -= rate * gradient_mean
+
+# Make predictions on the test set
+x_test_with_bias = np.hstack((np.ones((x_test.shape[0], 1)), x_test))
+y_predicted_raw = sigmoid(np.dot(x_test_with_bias, w))
+y_pred = np.where(y_predicted_raw >= 0.5, 1, 0)
+
+# Calculate metrics
+accuracy = accuracy_score(y_test, y_pred)
+precision = precision_score(y_test, y_pred)
+recall = recall_score(y_test, y_pred)
+f1 = f1_score(y_test, y_pred)
+
+print(f'Accuracy: {accuracy:.2f}')
+print(f'Precision: {precision:.2f}')
+print(f'Recall: {recall:.2f}')
+print(f'F1 Score: {f1:.2f}')
